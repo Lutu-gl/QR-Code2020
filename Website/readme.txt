@@ -1,0 +1,1 @@
+Zum Öffnen der Website, bitte index.html anklicken, dann kommt man auf die Home Seite.

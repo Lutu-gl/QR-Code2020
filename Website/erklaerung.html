@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+
+<html>
+
+	<head>
+			<link rel="stylesheet" href="style.css" type="text/css">
+			<title>QR Code | Erklärung</title>
+			<meta charset ="utf-8"
+	</head>
+		
+	<body>
+		<div id="wrapper">
+			<header><img src="bilder/qr_code_generator1.png" alt="QR Code"></header>
+			
+			<nav>
+				<ul>
+					<li><a href="index.html">Home<a/></li>
+					<li><a href="erklaerung.html">Erklärung<a/></li>
+				</ul>
+			</nav>
+			
+			<section>
+				<div class="article">
+					<h1>QR Code Erklärung</h1>
+					<a href="#">Herangehensweise</a>
+					<p>	Die Fähigkeiten des Programms sollen sein, dass man dem Programm einen String/Textdatei übergeben kann. Das Programm erstellt dann eine Bilddatei mit dem entsprechenden QR-Code. 
+					<p>	Unsere Herangehensweise war so, dass wir zuerst den Aufbau des QR-Codes analysiert haben (<a href="https://blauerbildschirm.wordpress.com/2012/03/05/wie-ein-qr-code-codiert-wird-turtorial-qr-code-encoding-tutorial/">https://blauerbildschirm.wordpress.com/2012/03/05/wie-ein-qr-code-codiert-wird-turtorial-qr-code-encoding-tutorial/</a>).
+					<p>	Nachdem wir alle den Aufbau verstanden haben, teilten wir uns die Arbeit auf. Als jeder seinen Teil fertig hatte fügten wir alles zusammen.
+					<p>	Als erstes Ziel setzten wir uns den QR-Code zu erstellen auf der 1. Version mit Fehlerkorrekturlevel H und dem alphanumerischen Modus. Als wir dies geschafft hatten, wollten wir das Programm noch erweitern und uns nicht nur auf den alphanumerischen Modus beschränken. Darum bauten wir das Programm um zum Byte Modus. Dadurch kann der Benutzer nicht nur Großbuchstaben eingeben, sondern hat auch die Möglichkeit Kleinbuchstaben und sonstige Zeichen zu verwenden.
+					<p>	Als dies mit Version 1 funktionierte entschieden wir uns noch die Größe des QR-Codes bis zur Version 6 möglich zu machen. Wir verwendeten immer das Fehlerkorrekturlevel H, also 30% Fehlertoleranz.  
+					</p>
+				</div>
+				
+				<div class="article">
+					<a href="#">Funktionsweise</a>
+					<p>	1.	Als ersten Schritt wird der String entweder vom Benutzer oder von einer Textdatei eingelesen. Der Benutzer kann dann noch die Größe des QR-Codes einstellen. Er kann aber auch die Größe automatisch anpassen lassen.
+					<p>	2.	Nun wird der Binäre String gebildet, der in den QR-Code eingefügt wird. Dieser besteht aus dem Modus, der Länge des Strings, dem vom Benutzer eingegebenen String in Binär umgewandelt und zuletzt noch aus Spezial Wörtern zum Auffüllen des Codes, um die maximale Kapazität zu erreichen.
+					<p>	3.	Als drittes werden die Daten für die Fehlerkorrektur hinzugefügt. Die Werte dafür werden mit dem Reed-Solomon-Code generiert. Da dieser ziemlich komplex ist, wird bei unserem Programm auf eine externe Seite verwiesen wo der Benutzer 2 Eingabe tätigen muss und die von der Seite ausgerechneten Werte in das Programm eingeben sollte (<a href="https://www.thonky.com/qr-code-tutorial/show-division-steps">https://www.thonky.com/qr-code-tutorial/show-division-steps</a>). Die Werte werden nun in Binär umgewandelt und (falls nötig) in Blöcke aufgeteilt (z.B. Die ersten 11*8 Werte sind Block 1. Die nächsten 11*8 Werte sind Block 2). Auch der schon existierende Code wird (falls nötig) in Blöcke aufteilt.
+					<p>	4.	Die von Schritt 3 erstellten Blöcke werden im vierten Schritt richtig zusammengefügt. Für jede Version gibt es eine andere Anzahl an Blöcken bzw. Korrekturwörtern (<a href="https://www.thonky.com/qr-code-tutorial/error-correction-table">https://www.thonky.com/qr-code-tutorial/error-correction-table</a>). Zuerst werden die ersten 8 Zeichen von Block 1 zum finalen String hinzugefügt, danach die ersten 8 Zeichen von Block 2… usw. 
+					<p> 5.	Der im Schritt 4 erstellte finale String wird nun in eine .pbm Datei eingetragen. Eine .pbm Datei stellt eine „1“ als schwarz da und eine „0“ als weiß.  Oben wird noch die Version (P1) und die Größe aufgeschrieben (siehe Abbildung 1).  
+					<p>	In die .pbm werden Erkennungszeichen und der Finale String eingetragen. Der Finale String wird von unten rechts in einem „zig-zag“ Muster aufgetragen (siehe Abbildung 2).
+					<p>	Es wird zudem auch eine Maske verwendet. Die auf die Maske zutreffenden Werte werden invertiert (1 -> 0 ; 0 -> 1) . Wir haben uns für die Maske entschieden bei dem nach diesem Schema gearbeitet wird: (y + x) % 2 == 0.
+					<p>	6.	Nun wurde der QR-Code erstellt und kann mit einer QR-Scanner App ausgelesen werden. 
+					</p>
+				</div>
+				
+				<div class="article">
+					<a href="#">Ausgabe</a>
+					<p>	Nachdem die binäre Zahlenfolge erstellt worden ist, wird diese und die  Zahl der Version übergeben.
+					<p>	Das matrix-Array stellt die Finder Patterns da (siehe Abbildung 3). (Finder Patterns = 3 Blocks in den Ecken, Ausrichtung Erkennung). Wie man sieht besteht dieses aus einem 7*7 Feld, und rechts und unten befinden sich die Separators.
+					<p>	Das alignemt- Array stellt die alignment patterns dar, welche den Finder patterns ähneln, jedoch kleiner sind und sie werden nicht in den Ecken platziert, sondern mitten im Code (siehe Abbildung 4). Sie werden ab der Version 2 benutzt. Und ihre Position hängt von der QR-Version ab.
+					<p>	Die typinfo ist eine vorgegebene Zahl und abhängig von der Maske (Wie benutzen Maske 0) (siehe Abbildung 5). Typinformation werden in folgender Reihenfolge eingetragen. Zuerst von unten nach oben und nur neben den Positionserkennungsfeldern. Schon belegte Felder werden dabei übersprungen.
+					<p>	Nun werden diese Elemente in den Code (Matrix welche am Ende ausgegeben wird) geschrieben.
+					<p>	Nun muss man noch die timing patterns hinzufügen, das gepunktete (einmal schwarz dann weiß usw.) Striche die die Finder Patterns horizontal und vertikal verbinden. Ihre Position ist fix und beträgt immer (x,6) (6,y). Nicht freie Felder werden übersprungen.
+					<p>	Als nächstes muss man das Dark module einfügen, für welchen eine einfache Formel gilt:
+					<p>	([(4 * V) + 9], 8). 
+					<p>	Nun schaut der Code aus wie in Abbildung 6.
+					<p>	Jetzt wird noch die Typ Info eingetragen (die blau markierten Felder) (siehe Abbildung 7).
+					<p>	Wenn das erledigt ist, muss man nur noch die binäre Reihenfolge eintragen. Die Bits werden folgendermaßen eingetragen:
+					<p>	Das erste Bit ganz unten rechts. Das Zweite Bit links daneben. Dann geht man eine Zeile höher und setzt das dritte Bit genau über das erste Bit. Das vierte Bit dann über das Zweite. Wieder eine Zeile höher und die Nächsten Bits nach dem gleichen Schema anordnen. Dann alle Bits mit einer geraden Summe der x und y-Koordinate ändern, weil wir die Maske 0 verwenden.
+					<p>	Wenn ihr oben angekommen seid macht ihr das gleiche von oben nach unten. Wieder zuerst das rechte Bit, dann das linke Bit, eine Zeile tiefer gehen und wieder das Bit rechts setzen und das nächste Bit links daneben.
+					<p> Belegte Felder werden übersprungen. Wie weiß man ob eine Position belegt ist oder nicht? Ganz am Anfang haben wir das Code Array mit -1 initialisiert, und jedes Mal, wenn wir etwas hineingeschrieben haben, haben wir die -1 mit einer 1 oder 0 ausgetauscht. Das heißt, wenn an der gewünschten Position eine -1 ist, ist es frei sonst nicht. 
+					<p>	Nun dürfte der QR-Code fertig und einscannbar sein.
+					</p>
+				</div>
+				
+				<div class="article">
+					<a href="#">Einlesen</a>
+					<p>Nun muss man eigentlich genau das gleiche tun, wie beim Ausgeben. Nur mit dem Unterschied wir müssen dem Programm irgendwie mitteilen welche Felder für Erkennung sind und welche der tatsächliche Code ist. Das tun wir indem wir einfach wie zuvor die Finder patterns aligment patterns usw. einfügen, jedoch bestehen diese Arrays nicht mehr aus 1 und 0 sondern aus -1. Nun gehen wir durcuh den QR-Code wie oben und lassen alle Felder aus die eine -1 besitzen. So haben wir die binäre Zahlenfolge vom QR-Code extrahiert, nachdem wir die ersten 12 Zahlen für die Maske brauchen (Maske 0), und für die Länge der Eingabe. Schiecken wir den Rest zu einem binär zu Asci Converter. Wenn das erledigt ist kann man den String ausgeben lassen und fertig ist das Einlesen.
+					</p>
+				</div>
+
+			</section>
+			
+			<aside>
+				<div class="sidebar">
+					<a href="#">Abbildung 1</a>
+					<img src="bilder/luca1.jpg" alt="Sidebar" height="260px" width="230px">
+					<p>Beispiel einer .bmp Datei</p>
+				</div>
+				<div class="sidebar">
+					<a href="#">Abbildung 2</a>
+					<img src="bilder/luca2.png" alt="Sidebar" height="200px" width="220px">
+					<p>"Zig-Zag" Muster + Erkennungszeichen</p>
+				</div>
+				<div class="sidebar">
+					<a href="#">Abbildung 3</a>
+					<img src="bilder/christi1.jpg" alt="Sidebar" height="200px" width="220px">
+					<p>matrix Array</p>
+				</div>
+				<div class="sidebar">
+					<a href="#">Abbildung 4</a>
+					<img src="bilder/christi2.jpg" alt="Sidebar" height="200px" width="220px">
+					<p>alignemt Array </p>
+				</div>
+				<div class="sidebar">
+					<a href="#">Abbildung 5</a>
+					<img src="bilder/christi3.jpg" alt="Sidebar" height="25px" width="260px">
+					<p>typinfo Array</p>
+				</div>
+				<div class="sidebar">
+					<a href="#">Abbildung 6</a>
+					<img src="bilder/christi4.jpg" alt="Sidebar" height="245px" width="245px">
+					<p>QR Code</p>
+				</div>
+				<div class="sidebar">
+					<a href="#">Abbildung 7</a>
+					<img src="bilder/christi5.jpg" alt="Sidebar" height="220px" width="245px">
+					<p>QR Code mit Typ Info</p>
+				</div>
+				<div class="sidebar">
+					<a href="#">Abbildung 8</a>
+					<img src="bilder/christi6.jpg" alt="Sidebar" height="220px" width="245px">
+					<p>QR Code Ablauf</p>
+				</div>
+			</aside>
+			
+			<footer>
+				<ul>
+					<li><a href="index.html">Home<a/></li>
+					<li><a href="erklaerung.html">Erklärung<a/></li>
+				</ul>
+				<p><a href="#">&copy;2020 Hochrainer | Turin | Hofer</a></p>
+			</footer>
+		</div>
+	</body>
+
+</html>
